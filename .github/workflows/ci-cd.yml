@@ -1,13 +1,22 @@
 name: CI/CD Pipeline
 
 on:
+  pull_request:
+    paths: ['server/**', 'client/**']
+
   push:
-    branches: [main, master]
+    branches: [main]
+    paths: ['server/**', 'client/**']
+  workflow_dispatch:  
 
 env:
   DOCKER_USER: samita7
   BACKEND_IMAGE: todo-backend
   FRONTEND_IMAGE: todo-frontend
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # --- STAGE 1: QUALITY GATE (TEST) ---
@@ -22,12 +31,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run Backend Trivial Test
+      - name: Run Backend Test
         run: |
           cd server
           npm install
 
-      - name: Run Frontend Trivial Test
+      - name: Run Frontend Test
         run: |
           cd client
           npm install
@@ -35,6 +44,7 @@ jobs:
   # --- STAGE 2: BUILD & PUSH TO DOCKER HUB ---
   build-and-push:
     needs: test-stage
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -43,7 +53,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: samita7
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up Docker Buildx
@@ -64,4 +74,21 @@ jobs:
           file: ./client/Dockerfile
           push: true
           tags: ${{ env.DOCKER_USER }}/${{ env.FRONTEND_IMAGE }}:latest
+
+  # --- STAGE 3: DEPLOY ---
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy on server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker-compose pull
+            docker-compose up -d --force-recreate
 
