@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  # --- BACEKND SERVICE ---
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: express-backend
+    env_file:
+      - ./server/.env
+    networks:
+      - app-network
+
+  # --- FRONTEND SERVICE ---
+  frontend:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL= /api
+    container_name: nextjs-frontend
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=/api
+    networks:
+      - app-network
+
+  # --- NGINX REVERSE PROXY
+  nginx:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    
+
+      
