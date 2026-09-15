@@ -29,6 +29,10 @@ router.post('/', async (req, res) => {
     const { title, description } = req.body;
     const todo = await Todo.create({ title, description });
     res.status(201).json(todo);
+
+    req.app.locals.todosCreatedCounter.inc();
+
+    res.status(201).json(newTodo)
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
