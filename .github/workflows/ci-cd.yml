@@ -5,7 +5,7 @@ on:
     branches: [main, master]
 
 env:
-  DOCKER_USER: samita77
+  DOCKER_USER: samita7
   BACKEND_IMAGE: todo-backend
   FRONTEND_IMAGE: todo-frontend
 
