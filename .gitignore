@@ -14,6 +14,9 @@ out/
 .env.*
 !.env.example
 
+# Secrets
+secrets.yaml
+
 # Logs
 *.log
 
@@ -24,3 +27,5 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+
