@@ -25,10 +25,7 @@ spec:
                 name: todo-config
                 key: NODE_ENV
           - name: NEXT_PUBLIC_API_URL
-            valueFrom:
-              configMapKeyRef:
-                name: todo-config
-                key: NEXT_PUBLIC_API_URL
+            value: "http://backend:5000/api"
 ---
 apiVersion: v1
 kind: Service
